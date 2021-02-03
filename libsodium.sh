@@ -1,7 +1,8 @@
 #!/bin/bash
 
 LIBNAME="libsodium.a"
-ARCHS=${ARCHS:-"armv7 armv7s arm64"}
+ARCHS=${ARCHS:-"armv7 armv7s arm64 i386 x86_64"}
+#ARCHS=${ARCHS:-"arm64 i386 x86_64"}
 DEVELOPER=$(xcode-select -print-path)
 LIPO=$(xcrun -sdk iphoneos -find lipo)
 #LIPO=lipo
@@ -16,10 +17,14 @@ DISTDIR="${DSTDIR}/libsodium_dist"
 DISTLIBDIR="${DISTDIR}/lib"
 # http://libwebp.webm.googlecode.com/git/iosbuild.sh
 # Extract the latest SDK version from the final field of the form: iphoneosX.Y
-SDK=$(xcodebuild -showsdks \
+PHONE_SDK=$(xcodebuild -showsdks \
     | grep iphoneos | sort | tail -n 1 | awk '{print substr($NF, 9)}'
     )
+SIM_SDK=$(xcodebuild -showsdks \
+    | grep iphonesimulator | sort | tail -n 1 | awk '{print substr($NF, 16)}'
+    )
 
+IOS_VERSION_MIN=8.0
 OTHER_CFLAGS="-Os -Qunused-arguments"
 
 # Cleanup
@@ -47,41 +52,41 @@ do
 	    PLATFORM="iPhoneOS"
 	    HOST="${ARCH}-apple-darwin"
 	    export BASEDIR="${DEVELOPER}/Platforms/${PLATFORM}.platform/Developer"
-	    export ISDKROOT="${BASEDIR}/SDKs/${PLATFORM}${SDK}.sdk"
-	    export CFLAGS="-arch ${ARCH} -isysroot ${ISDKROOT} ${OTHER_CFLAGS}"
+	    export ISDKROOT="${BASEDIR}/SDKs/${PLATFORM}${PHONE_SDK}.sdk"
+	    export CFLAGS="-arch ${ARCH} -isysroot ${ISDKROOT} -mios-version-min=${IOS_VERSION_MIN}  ${OTHER_CFLAGS}"
 	    export LDFLAGS="-mthumb -arch ${ARCH} -isysroot ${ISDKROOT}"
             ;;
         armv7s)
 	    PLATFORM="iPhoneOS"
 	    HOST="${ARCH}-apple-darwin"
 	    export BASEDIR="${DEVELOPER}/Platforms/${PLATFORM}.platform/Developer"
-	    export ISDKROOT="${BASEDIR}/SDKs/${PLATFORM}${SDK}.sdk"
-	    export CFLAGS="-arch ${ARCH} -isysroot ${ISDKROOT} ${OTHER_CFLAGS}"
+	    export ISDKROOT="${BASEDIR}/SDKs/${PLATFORM}${PHONE_SDK}.sdk"
+	    export CFLAGS="-arch ${ARCH} -isysroot ${ISDKROOT} -mios-version-min=${IOS_VERSION_MIN}  ${OTHER_CFLAGS}"
 	    export LDFLAGS="-mthumb -arch ${ARCH} -isysroot ${ISDKROOT}"
             ;;
         arm64)
 	    PLATFORM="iPhoneOS"
 	    HOST="arm-apple-darwin"
 	    export BASEDIR="${DEVELOPER}/Platforms/${PLATFORM}.platform/Developer"
-	    export ISDKROOT="${BASEDIR}/SDKs/${PLATFORM}${SDK}.sdk"
-	    export CFLAGS="-arch ${ARCH} -isysroot ${ISDKROOT} ${OTHER_CFLAGS}"
+	    export ISDKROOT="${BASEDIR}/SDKs/${PLATFORM}${PHONE_SDK}.sdk"
+	    export CFLAGS="-arch ${ARCH} -isysroot ${ISDKROOT} -mios-version-min=${IOS_VERSION_MIN}  ${OTHER_CFLAGS}"
 	    export LDFLAGS="-mthumb -arch ${ARCH} -isysroot ${ISDKROOT}"
             ;;
         i386)
 	    PLATFORM="iPhoneSimulator"
 	    HOST="${ARCH}-apple-darwin"
 	    export BASEDIR="${DEVELOPER}/Platforms/${PLATFORM}.platform/Developer"
-	    export ISDKROOT="${BASEDIR}/SDKs/${PLATFORM}${SDK}.sdk"
-	    export CFLAGS="-arch ${ARCH} -isysroot ${ISDKROOT} -miphoneos-version-min=${SDK} ${OTHER_CFLAGS}"
-	    export LDFLAGS="-m32 -arch ${ARCH}"
+	    export ISDKROOT="${BASEDIR}/SDKs/${PLATFORM}${SIM_SDK}.sdk"
+	    export CFLAGS="-arch ${ARCH} -isysroot ${ISDKROOT} -mios-version-min=${IOS_VERSION_MIN}  ${OTHER_CFLAGS}"
+	    export LDFLAGS="-m32 -arch ${ARCH} -isysroot ${ISDKROOT} ${OTHER_LDFLAGS}"
             ;;
         x86_64)
 	    PLATFORM="iPhoneSimulator"
 	    HOST="${ARCH}-apple-darwin"
 	    export BASEDIR="${DEVELOPER}/Platforms/${PLATFORM}.platform/Developer"
 	    export ISDKROOT="${BASEDIR}/SDKs/${PLATFORM}${SDK}.sdk"
-	    export CFLAGS="-arch ${ARCH} -isysroot ${ISDKROOT} -miphoneos-version-min=${SDK} ${OTHER_CFLAGS}"
-	    export LDFLAGS="-arch ${ARCH}"
+	    export CFLAGS="-arch ${ARCH} -isysroot ${ISDKROOT} -mios-version-min=${IOS_VERSION_MIN}  ${OTHER_CFLAGS}"
+	    export LDFLAGS="-arch ${ARCH} -isysroot ${ISDKROOT} ${OTHER_LDFLAGS}"
             ;;
         *)
             echo "Unsupported architecture ${ARCH}"
